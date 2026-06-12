@@ -29,7 +29,21 @@ export type ElectronWorldCupApi = {
   getNewsArticle: (path: string) => Promise<WorldCupNewsArticleResponse>
 }
 
+const isStaticDataMode = import.meta.env.VITE_STATIC_DATA_MODE === 'true'
+let cachedNewsArticles: Record<string, WorldCupNewsArticleResponse> | null = null
+
 const getElectronApi = () => window.worldCupApi
+const buildAssetPath = (relativePath: string) => `${import.meta.env.BASE_URL}${relativePath.replace(/^\//, '')}`
+
+const fetchJson = async <T>(url: string) => {
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`)
+  }
+
+  return (await response.json()) as T
+}
 
 export const isElectronWorldCupApp = () => Boolean(getElectronApi()?.isElectron)
 
@@ -40,13 +54,11 @@ export const loadTitanLiveScores = async () => {
     return electronApi.getLiveScores()
   }
 
-  const response = await fetch('/api/titan/live-scores')
-
-  if (!response.ok) {
-    throw new Error(`Live score request failed: ${response.status}`)
+  if (isStaticDataMode) {
+    return fetchJson<TitanLiveScoreResponse>(buildAssetPath('api/titan/live-scores.json'))
   }
 
-  return (await response.json()) as TitanLiveScoreResponse
+  return fetchJson<TitanLiveScoreResponse>('/api/titan/live-scores')
 }
 
 export const loadWorldCupNews = async () => {
@@ -56,13 +68,11 @@ export const loadWorldCupNews = async () => {
     return electronApi.getNews()
   }
 
-  const response = await fetch('/api/world-cup/news')
-
-  if (!response.ok) {
-    throw new Error(`World Cup news request failed: ${response.status}`)
+  if (isStaticDataMode) {
+    return fetchJson<WorldCupNewsResponse>(buildAssetPath('api/world-cup/news.json'))
   }
 
-  return (await response.json()) as WorldCupNewsResponse
+  return fetchJson<WorldCupNewsResponse>('/api/world-cup/news')
 }
 
 export const loadWorldCupNewsArticle = async (path: string) => {
@@ -72,11 +82,23 @@ export const loadWorldCupNewsArticle = async (path: string) => {
     return electronApi.getNewsArticle(path)
   }
 
-  const response = await fetch(`/api/world-cup/news/article?path=${encodeURIComponent(path)}`)
+  if (isStaticDataMode) {
+    if (!cachedNewsArticles) {
+      cachedNewsArticles = await fetchJson<Record<string, WorldCupNewsArticleResponse>>(
+        buildAssetPath('api/world-cup/news-articles.json'),
+      )
+    }
 
-  if (!response.ok) {
-    throw new Error(`World Cup news article request failed: ${response.status}`)
+    const article = cachedNewsArticles[path]
+
+    if (!article) {
+      throw new Error('World Cup news article not found.')
+    }
+
+    return article
   }
 
-  return (await response.json()) as WorldCupNewsArticleResponse
+  return fetchJson<WorldCupNewsArticleResponse>(
+    `/api/world-cup/news/article?path=${encodeURIComponent(path)}`,
+  )
 }

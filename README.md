@@ -11,6 +11,11 @@
 
 - `npm run build`
 
+## GitHub Pages
+
+- `npm run build:pages`
+- GitHub Actions 會在 `main` 推送後與每小時自動更新 Pages 靜態資料
+
 ## macOS 桌面版打包
 
 - `npm run package:mac`

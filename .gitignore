@@ -11,8 +11,10 @@ node_modules
 dist
 dist-ssr
 electron-dist
+.tmp
 *.local
 release/
+public/api/
 
 # Editor directories and files
 .vscode/*
