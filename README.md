@@ -14,5 +14,7 @@
 ## macOS 桌面版打包
 
 - `npm run package:mac`
+- 預設輸出較小的 `tar.xz` 發佈檔，較容易避開 GitHub 100 MB 限制
+- 如果仍需要 zip，可用 `npm run package:mac:zip`
 
 產物會輸出到 `release/` 目錄。
