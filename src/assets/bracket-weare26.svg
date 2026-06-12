@@ -1,0 +1,15 @@
+<svg width="900" height="420" viewBox="0 0 900 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="objectBoundingBox">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <text x="12" y="148" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-size="186" font-weight="900" letter-spacing="-20">WE</text>
+    <text x="16" y="304" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-size="186" font-weight="900" letter-spacing="-20">ARE</text>
+    <text x="480" y="156" fill="#3558FF" font-family="Arial Black, Arial, sans-serif" font-size="216" font-weight="900">2</text>
+    <text x="482" y="312" fill="#3558FF" font-family="Arial Black, Arial, sans-serif" font-size="216" font-weight="900">6</text>
+    <text x="14" y="392" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="1">USA MEXICO CANADA</text>
+  </g>
+</svg>

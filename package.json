@@ -1,0 +1,55 @@
+{
+  "name": "worldcup2026",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "electron-dist/main.mjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:electron": "esbuild electron/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=electron-dist/main.mjs && esbuild electron/preload.ts --bundle --platform=node --format=cjs --target=node20 --outfile=electron-dist/preload.cjs",
+    "package:mac": "npm run build && npm run build:electron && electron-builder --mac zip",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.15.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^8.0.12"
+  },
+  "build": {
+    "appId": "com.cskalok.worldcup2026",
+    "productName": "World Cup 2026",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron-dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "category": "public.app-category.sports"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#12091c" />
+      <stop offset="0.4" stop-color="#1a1026" />
+      <stop offset="1" stop-color="#07182c" />
+    </linearGradient>
+    <linearGradient id="leftGlow" x1="0" y1="0" x2="700" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f24672" stop-opacity="0.7" />
+      <stop offset="1" stop-color="#f48aa4" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="rightGlow" x1="1600" y1="1200" x2="980" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2d8fff" stop-opacity="0.74" />
+      <stop offset="1" stop-color="#59b7ff" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="centerSpot" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(806 512) rotate(90) scale(468 510)">
+      <stop stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="stars" width="220" height="220" patternUnits="userSpaceOnUse">
+      <g opacity="0.1">
+        <path d="M42 16L48.8541 31.1459L64 38L48.8541 44.8541L42 60L35.1459 44.8541L20 38L35.1459 31.1459L42 16Z" fill="#ffffff"/>
+        <path d="M156 72L160.438 81.5623L170 86L160.438 90.4377L156 100L151.562 90.4377L142 86L151.562 81.5623L156 72Z" fill="#ffffff"/>
+        <path d="M110 138L118.09 155.91L136 164L118.09 172.09L110 190L101.91 172.09L84 164L101.91 155.91L110 138Z" fill="#ffffff"/>
+        <path d="M184 154L189.562 165.438L201 171L189.562 176.562L184 188L178.438 176.562L167 171L178.438 165.438L184 154Z" fill="#ffffff"/>
+      </g>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="1200" fill="url(#bg)" />
+  <circle cx="120" cy="140" r="520" fill="url(#leftGlow)" />
+  <circle cx="1450" cy="1040" r="640" fill="url(#rightGlow)" />
+  <ellipse cx="806" cy="512" rx="510" ry="468" fill="url(#centerSpot)" />
+  <rect width="1600" height="1200" fill="url(#stars)" />
+
+  <g opacity="0.18">
+    <path d="M0 830C190 748 351 724 556 766C772 810 925 917 1135 936C1311 952 1438 915 1600 802V1200H0V830Z" fill="#ffffff"/>
+    <path d="M0 895C201 814 360 793 564 823C765 852 945 956 1144 988C1319 1015 1461 985 1600 900V1200H0V895Z" fill="#9bc7ff"/>
+  </g>
+
+  <g opacity="0.08">
+    <path d="M149 200L196 258L128 276L149 200Z" fill="#ffffff"/>
+    <path d="M1380 156L1442 234L1341 249L1380 156Z" fill="#ffffff"/>
+    <path d="M1296 891L1358 969L1257 984L1296 891Z" fill="#ffffff"/>
+    <path d="M212 1007L269 1079L177 1095L212 1007Z" fill="#ffffff"/>
+  </g>
+</svg>
