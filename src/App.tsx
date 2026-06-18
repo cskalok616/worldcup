@@ -18,7 +18,7 @@ function formatUpdatedAt(updatedAt: string) {
 }
 
 function App() {
-  const { liveScores, updatedAt } = useTitanLiveScores()
+  const { liveScores, matchIds, updatedAt } = useTitanLiveScores()
   const formattedUpdatedAt = updatedAt ? formatUpdatedAt(updatedAt) : '載入中'
 
   return (
@@ -93,8 +93,11 @@ function App() {
       </header>
 
       <Routes>
-        <Route path="/" element={<HomePage liveScores={liveScores} />} />
-        <Route path="/schedule" element={<SchedulePage liveScores={liveScores} />} />
+        <Route path="/" element={<HomePage liveScores={liveScores} matchIds={matchIds} />} />
+        <Route
+          path="/schedule"
+          element={<SchedulePage liveScores={liveScores} matchIds={matchIds} />}
+        />
         <Route path="/standings" element={<StandingsPage liveScores={liveScores} />} />
         <Route path="/round-of-32" element={<RoundOf32Page liveScores={liveScores} />} />
         <Route path="/round-of-16" element={<RoundOf16Page liveScores={liveScores} />} />

@@ -4,7 +4,9 @@ import { groupFixtures } from './src/data/worldCup'
 
 const TITAN_SCORE_DATA_URL = 'https://zq.titan007.com/jsData/matchResult/2026/c75.js?version=2026051302'
 const TITAN_REFERER_URL = 'https://zq.titan007.com/big/CupMatch/2026/75.html'
+const TITAN_LIVE_DETAIL_URL = 'https://live.titan007.com/detail'
 const CACHE_TTL_MS = 60_000
+const MATCH_STATS_CACHE_TTL_MS = 10 * 60_000
 const HK01_WORLD_CUP_TAG_URL = 'https://www.hk01.com/tag/21842'
 const HK01_NEWS_CACHE_TTL_MS = 600_000
 
@@ -27,6 +29,19 @@ type TitanSandbox = {
 export type LiveScoresResponse = {
   updatedAt: string
   scores: Record<string, string>
+  matchIds: Record<string, string>
+}
+
+export type TitanMatchStatLine = {
+  label: string
+  home: string
+  away: string
+}
+
+export type TitanMatchStatsResponse = {
+  updatedAt: string
+  matchId: string
+  stats: TitanMatchStatLine[]
 }
 
 export type WorldCupNewsItem = {
@@ -51,6 +66,9 @@ export type WorldCupNewsArticleResponse = {
 let cachedResponse: LiveScoresResponse | null = null
 let cachedAt = 0
 let inflightRequest: Promise<LiveScoresResponse> | null = null
+const cachedMatchStatsResponses = new Map<string, TitanMatchStatsResponse>()
+const cachedMatchStatsAt = new Map<string, number>()
+const inflightMatchStatsRequests = new Map<string, Promise<TitanMatchStatsResponse>>()
 let cachedNewsResponse: WorldCupNewsResponse | null = null
 let cachedNewsAt = 0
 let inflightNewsRequest: Promise<WorldCupNewsResponse> | null = null
@@ -97,6 +115,38 @@ const sanitizeNewsTitle = (title: string) => {
 
 const stripHtml = (value: string) =>
   decodeHtml(value.replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, ' ')).replace(/\s*\n\s*/g, '\n').trim()
+
+const targetStatLabels = ['角球', '半场角球', '射门', '射正', '进攻', '任意球', '控球率', '黄牌', '红牌']
+
+const normalizeStatLabel = (label: string) => label.replace(/紅/g, '红').trim()
+
+const extractTitanMatchStats = (html: string): TitanMatchStatLine[] => {
+  const statRows = [...html.matchAll(/<li class='lists'>[\s\S]*?<div class='data'><span[^>]*>([\s\S]*?)<\/span><span>([^<]+)<\/span><span[^>]*>([\s\S]*?)<\/span><\/div>[\s\S]*?<\/li>/g)]
+  const statMap = new Map<string, TitanMatchStatLine>()
+
+  for (const row of statRows) {
+    const rawLabel = stripHtml(row[2] ?? '')
+    const normalizedLabel = normalizeStatLabel(rawLabel)
+
+    if (!targetStatLabels.includes(normalizedLabel)) {
+      continue
+    }
+
+    statMap.set(normalizedLabel, {
+      label: normalizedLabel,
+      home: stripHtml(row[1] ?? '') || '-',
+      away: stripHtml(row[3] ?? '') || '-',
+    })
+  }
+
+  return targetStatLabels.map((label) =>
+    statMap.get(label) ?? {
+      label,
+      home: '-',
+      away: '-',
+    },
+  )
+}
 
 const formatAgeLabel = (publishedAt: string) => {
   const ageMs = Date.now() - new Date(publishedAt).getTime()
@@ -217,9 +267,56 @@ const fetchTitanLiveScores = async (): Promise<LiveScoresResponse> => {
     }),
   )
 
+  const matchIds = Object.fromEntries(
+    groupFixtures.map((fixture) => {
+      const groupKey = getGroupKey(sandbox.jh, fixture.groupId)
+      const records = (groupKey ? sandbox.jh[groupKey] : []) ?? []
+      const fixtureDateTime = `2026-${fixture.date} ${fixture.time}`
+
+      const matchedRecord =
+        records.find((record) => {
+          const recordDateTime = typeof record[3] === 'string' ? record[3].slice(0, 16) : ''
+          const homeTeamName = normalizeTeamName(String(teamNameById[Number(record[4])] ?? ''))
+          const awayTeamName = normalizeTeamName(String(teamNameById[Number(record[5])] ?? ''))
+
+          return (
+            recordDateTime === fixtureDateTime &&
+            homeTeamName === normalizeTeamName(fixture.homeTeam) &&
+            awayTeamName === normalizeTeamName(fixture.awayTeam)
+          )
+        }) ?? records[groupFixtures.filter((item) => item.groupId === fixture.groupId).indexOf(fixture)]
+
+      return [fixture.id, String(matchedRecord?.[0] ?? '')]
+    }),
+  )
+
   return {
     updatedAt: new Date().toISOString(),
     scores,
+    matchIds,
+  }
+}
+
+const fetchTitanMatchStats = async (matchId: string): Promise<TitanMatchStatsResponse> => {
+  const response = await fetch(`${TITAN_LIVE_DETAIL_URL}/${matchId}cn.htm`, {
+    headers: {
+      'accept-language': 'zh-TW,zh;q=0.9,en;q=0.8',
+      referer: TITAN_REFERER_URL,
+      'user-agent': 'Mozilla/5.0',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Titan match stats request failed: ${response.status}`)
+  }
+
+  const html = await response.text()
+  const stats = extractTitanMatchStats(html)
+
+  return {
+    updatedAt: new Date().toISOString(),
+    matchId,
+    stats,
   }
 }
 
@@ -316,6 +413,37 @@ export const getCachedWorldCupNews = async () => {
   return inflightNewsRequest
 }
 
+export const getCachedTitanMatchStats = async (matchId: string) => {
+  const now = Date.now()
+  const cachedStats = cachedMatchStatsResponses.get(matchId)
+  const matchStatsCachedAt = cachedMatchStatsAt.get(matchId) ?? 0
+
+  if (cachedStats && now - matchStatsCachedAt < MATCH_STATS_CACHE_TTL_MS) {
+    return cachedStats
+  }
+
+  const inflightMatchStats = inflightMatchStatsRequests.get(matchId)
+
+  if (inflightMatchStats) {
+    return inflightMatchStats
+  }
+
+  const request = fetchTitanMatchStats(matchId)
+    .then((result) => {
+      cachedMatchStatsResponses.set(matchId, result)
+      cachedMatchStatsAt.set(matchId, Date.now())
+
+      return result
+    })
+    .finally(() => {
+      inflightMatchStatsRequests.delete(matchId)
+    })
+
+  inflightMatchStatsRequests.set(matchId, request)
+
+  return request
+}
+
 export const getCachedWorldCupNewsArticle = async (path: string) => {
   const now = Date.now()
   const cachedArticle = cachedArticleResponses.get(path)
@@ -392,6 +520,35 @@ const attachWorldCupNewsRoute = (req: IncomingMessage, res: ServerResponse, next
     })
 }
 
+const attachTitanMatchStatsRoute = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+  const requestUrl = new URL(req.url ?? '/', 'http://127.0.0.1')
+
+  if (req.method !== 'GET' || requestUrl.pathname !== '/api/titan/match-stats') {
+    next()
+
+    return
+  }
+
+  const matchId = requestUrl.searchParams.get('matchId') ?? ''
+
+  if (!/^\d+$/.test(matchId)) {
+    sendJson(res, 400, { message: 'Invalid matchId.' })
+
+    return
+  }
+
+  void getCachedTitanMatchStats(matchId)
+    .then((payload) => {
+      sendJson(res, 200, payload)
+    })
+    .catch((error) => {
+      sendJson(res, 503, {
+        message: 'Unable to load Titan match stats.',
+        error: error instanceof Error ? error.message : String(error),
+      })
+    })
+}
+
 const attachWorldCupNewsArticleRoute = (
   req: IncomingMessage,
   res: ServerResponse,
@@ -431,6 +588,8 @@ export const attachWorldCupApiRoutes = (
   next: () => void,
 ) => {
   attachTitanLiveScoreRoute(req, res, () =>
-    attachWorldCupNewsRoute(req, res, () => attachWorldCupNewsArticleRoute(req, res, next)),
+    attachTitanMatchStatsRoute(req, res, () =>
+      attachWorldCupNewsRoute(req, res, () => attachWorldCupNewsArticleRoute(req, res, next)),
+    ),
   )
 }

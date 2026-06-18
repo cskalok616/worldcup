@@ -5,6 +5,7 @@ const LIVE_SCORE_REFRESH_MS = 60_000
 
 export const useTitanLiveScores = () => {
   const [liveScores, setLiveScores] = useState<Record<string, string>>({})
+  const [matchIds, setMatchIds] = useState<Record<string, string>>({})
   const [updatedAt, setUpdatedAt] = useState<string>('')
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export const useTitanLiveScores = () => {
 
         if (!isDisposed) {
           setLiveScores(payload.scores)
+          setMatchIds(payload.matchIds ?? {})
           setUpdatedAt(payload.updatedAt)
         }
       } catch (error) {
@@ -37,6 +39,7 @@ export const useTitanLiveScores = () => {
 
   return {
     liveScores,
+    matchIds,
     updatedAt,
   }
 }

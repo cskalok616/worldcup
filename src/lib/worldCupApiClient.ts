@@ -1,6 +1,19 @@
 export type TitanLiveScoreResponse = {
   updatedAt: string
   scores: Record<string, string>
+  matchIds?: Record<string, string>
+}
+
+export type TitanMatchStatLine = {
+  label: string
+  home: string
+  away: string
+}
+
+export type TitanMatchStatsResponse = {
+  updatedAt: string
+  matchId: string
+  stats: TitanMatchStatLine[]
 }
 
 export type WorldCupNewsItem = {
@@ -25,6 +38,7 @@ export type WorldCupNewsArticleResponse = {
 export type ElectronWorldCupApi = {
   isElectron: boolean
   getLiveScores: () => Promise<TitanLiveScoreResponse>
+  getMatchStats: (matchId: string) => Promise<TitanMatchStatsResponse>
   getNews: () => Promise<WorldCupNewsResponse>
   getNewsArticle: (path: string) => Promise<WorldCupNewsArticleResponse>
 }
@@ -73,6 +87,22 @@ export const loadWorldCupNews = async () => {
   }
 
   return fetchJson<WorldCupNewsResponse>('/api/world-cup/news')
+}
+
+export const loadTitanMatchStats = async (matchId: string) => {
+  const electronApi = getElectronApi()
+
+  if (electronApi) {
+    return electronApi.getMatchStats(matchId)
+  }
+
+  if (isStaticDataMode) {
+    throw new Error('Titan match stats are unavailable in static data mode.')
+  }
+
+  return fetchJson<TitanMatchStatsResponse>(
+    `/api/titan/match-stats?matchId=${encodeURIComponent(matchId)}`,
+  )
 }
 
 export const loadWorldCupNewsArticle = async (path: string) => {

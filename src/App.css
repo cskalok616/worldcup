@@ -194,6 +194,30 @@
   font-weight: 700;
 }
 
+.prediction-betting-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding-top: 2px;
+}
+
+.prediction-betting-head strong {
+  color: var(--heading);
+}
+
+.prediction-betting-head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.prediction-betting-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+}
+
 .prediction-table-cell {
   min-width: 128px;
 }
@@ -212,6 +236,21 @@
   color: var(--muted);
   font-size: 0.84rem;
   font-weight: 700;
+}
+
+.prediction-odds-meta {
+  display: grid;
+  gap: 4px;
+  color: #34516b;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.prediction-note {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .eyebrow,
@@ -509,6 +548,13 @@
   margin-bottom: 20px;
 }
 
+.result-date-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
 .match-list {
   display: grid;
   gap: 14px;
@@ -797,6 +843,80 @@
   padding: 16px 18px;
   border-radius: 18px;
   background: var(--surface);
+}
+
+.route-cta-panel .preview-row {
+  padding: 18px 20px;
+  border-radius: 20px;
+}
+
+.result-report-item {
+  display: grid;
+  gap: 10px;
+}
+
+.route-cta-panel .preview-row strong {
+  font-size: 1.04rem;
+}
+
+.route-cta-panel .schedule-stage {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 0.94rem;
+}
+
+.score-trigger {
+  border: 0;
+  cursor: pointer;
+}
+
+.score-trigger:hover,
+.score-trigger:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(15, 107, 128, 0.16);
+}
+
+.result-stats-panel {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(112, 79, 34, 0.08);
+}
+
+.result-stats-table {
+  display: grid;
+  gap: 6px;
+}
+
+.result-stats-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.result-stats-label {
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.result-stats-value {
+  color: var(--heading);
+  font-weight: 800;
+}
+
+.result-stats-value:first-child {
+  text-align: right;
+}
+
+.result-stats-empty {
+  color: var(--muted);
+  font-weight: 700;
+  padding: 8px 10px;
 }
 
 .match-item {

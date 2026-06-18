@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { groupFixtureVenues, groupFixtures, groups } from '../data/worldCup'
+import { loadTitanMatchStats } from '../lib/worldCupApiClient'
 
 const weekdayFormatter = new Intl.DateTimeFormat('zh-TW', { weekday: 'short' })
 
@@ -12,9 +14,64 @@ const parseFixtureDateTime = (date: string, time: string) => new Date(`2026-${da
 
 type SchedulePageProps = {
   liveScores: Record<string, string>
+  matchIds: Record<string, string>
 }
 
-export function SchedulePage({ liveScores }: SchedulePageProps) {
+const hasFinalScore = (score: string) => /(\d+)\s*[-:：]\s*(\d+)/.test(score)
+
+export function SchedulePage({ liveScores, matchIds }: SchedulePageProps) {
+  const [cornerLabelsByFixture, setCornerLabelsByFixture] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    let isDisposed = false
+
+    const loadCornerStats = async () => {
+      const completedFixtures = groupFixtures.filter((fixture) =>
+        hasFinalScore(liveScores[fixture.id] ?? fixture.score),
+      )
+
+      const pendingFixtures = completedFixtures.filter(
+        (fixture) => matchIds[fixture.id] && !Object.hasOwn(cornerLabelsByFixture, fixture.id),
+      )
+
+      if (pendingFixtures.length === 0) {
+        return
+      }
+
+      const entries = await Promise.all(
+        pendingFixtures.map(async (fixture) => {
+          try {
+            const payload = await loadTitanMatchStats(matchIds[fixture.id])
+            const cornerStat = payload.stats.find((stat) => stat.label === '角球')
+
+            if (!cornerStat) {
+              return [fixture.id, ''] as const
+            }
+
+            return [fixture.id, `${cornerStat.home}-${cornerStat.away}`] as const
+          } catch (error) {
+            console.error(`Unable to load corner stats for fixture ${fixture.id}.`, error)
+
+            return [fixture.id, ''] as const
+          }
+        }),
+      )
+
+      if (!isDisposed) {
+        setCornerLabelsByFixture((current) => ({
+          ...current,
+          ...Object.fromEntries(entries),
+        }))
+      }
+    }
+
+    void loadCornerStats()
+
+    return () => {
+      isDisposed = true
+    }
+  }, [liveScores, matchIds])
+
   const scheduleRows = [...groupFixtures]
     .sort(
       (left, right) =>
@@ -27,6 +84,7 @@ export function SchedulePage({ liveScores }: SchedulePageProps) {
       time: fixture.time,
       homeTeam: fixture.homeTeam,
       score: liveScores[fixture.id] ?? fixture.score,
+      cornerScore: cornerLabelsByFixture[fixture.id] ?? '',
       awayTeam: fixture.awayTeam,
       groupLabel: groups.find((group) => group.id === fixture.groupId)?.label ?? fixture.groupId,
       venue: groupFixtureVenues[fixture.id] ?? '待定',
@@ -59,7 +117,10 @@ export function SchedulePage({ liveScores }: SchedulePageProps) {
                   <td>{row.weekday}</td>
                   <td>{row.time}</td>
                   <td className="team-name">{row.homeTeam}</td>
-                  <td className="points">{row.score}</td>
+                  <td className="points">
+                    {row.score}
+                    {row.cornerScore ? `（角球 ${row.cornerScore}）` : ''}
+                  </td>
                   <td className="team-name">{row.awayTeam}</td>
                   <td>{row.groupLabel}</td>
                   <td>{row.venue}</td>

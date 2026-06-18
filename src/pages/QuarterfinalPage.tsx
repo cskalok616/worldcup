@@ -22,6 +22,24 @@ const parseMatchup = (matchup: string) => {
   return { homeTeam, awayTeam: awayTeam || '待定' }
 }
 
+const isPlaceholderToken = (token: string) => {
+  const normalizedToken = token.trim()
+
+  return (
+    normalizedToken.length === 0 ||
+    normalizedToken === '待定' ||
+    normalizedToken.includes('/') ||
+    /^[A-L](1|2|3)$/.test(normalizedToken) ||
+    /^\d+(勝者|負者)$/.test(normalizedToken)
+  )
+}
+
+const canPredictMatchup = (matchup: string) => {
+  const { homeTeam, awayTeam } = parseMatchup(matchup)
+
+  return !isPlaceholderToken(homeTeam) && !isPlaceholderToken(awayTeam)
+}
+
 type KnockoutTableSectionProps = {
   title: string
   kicker: string
@@ -67,7 +85,10 @@ function KnockoutTableSection({ title, kicker, matches, liveScores, predictionMa
           <tbody>
             {matches.map((match) => {
               const { homeTeam, awayTeam } = parseMatchup(match.matchup)
-              const prediction = predictKnockoutMatch(match.matchup, liveGroups, predictionMatches)
+              const canPredict = canPredictMatchup(match.matchup)
+              const prediction = canPredict
+                ? predictKnockoutMatch(match.matchup, liveGroups, predictionMatches)
+                : null
 
               return (
                 <tr key={match.id}>
@@ -80,8 +101,14 @@ function KnockoutTableSection({ title, kicker, matches, liveScores, predictionMa
                   <td className="team-name">{awayTeam}</td>
                   <td>{match.venue}</td>
                   <td className="prediction-table-cell">
-                    <strong>{prediction.favorite}</strong>
-                    <span>信心 {prediction.confidenceIndex}</span>
+                    {prediction ? (
+                      <>
+                        <strong>{prediction.favorite}</strong>
+                        <span>信心 {prediction.confidenceIndex}</span>
+                      </>
+                    ) : (
+                      <span>待定</span>
+                    )}
                   </td>
                 </tr>
               )

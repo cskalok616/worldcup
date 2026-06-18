@@ -2,6 +2,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import {
+  getCachedTitanMatchStats,
   getCachedTitanLiveScores,
   getCachedWorldCupNews,
   getCachedWorldCupNewsArticle,
@@ -29,6 +30,9 @@ const createWindow = () => {
 }
 
 ipcMain.handle('worldcup:get-live-scores', async () => getCachedTitanLiveScores())
+ipcMain.handle('worldcup:get-match-stats', async (_event, matchId: string) =>
+  getCachedTitanMatchStats(matchId),
+)
 ipcMain.handle('worldcup:get-news', async () => getCachedWorldCupNews())
 ipcMain.handle('worldcup:get-news-article', async (_event, pathValue: string) =>
   getCachedWorldCupNewsArticle(pathValue),

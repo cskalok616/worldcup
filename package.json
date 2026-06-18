@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "build:static-data": "esbuild scripts/buildStaticApi.ts --bundle --platform=node --format=esm --target=node20 --outfile=.tmp/buildStaticApi.mjs && node .tmp/buildStaticApi.mjs",
     "build:pages": "npm run build:static-data && tsc -b && vite build",
-    "build:electron": "esbuild electron/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=electron-dist/main.mjs && esbuild electron/preload.ts --bundle --platform=node --format=cjs --target=node20 --outfile=electron-dist/preload.cjs",
+    "build:electron": "esbuild electron/main.ts --bundle --platform=node --format=esm --target=node20 --external:electron --outfile=electron-dist/main.mjs && esbuild electron/preload.ts --bundle --platform=node --format=cjs --target=node20 --external:electron --outfile=electron-dist/preload.cjs",
     "package:mac": "npm run build && npm run build:electron && electron-builder --mac dir && cd release/mac-arm64 && rm -f ../\"World Cup 2026-0.0.0-arm64-mac.tar.xz\" && tar -cJf ../\"World Cup 2026-0.0.0-arm64-mac.tar.xz\" \"World Cup 2026.app\"",
     "package:mac:zip": "npm run build && npm run build:electron && electron-builder --mac zip",
     "lint": "eslint .",
